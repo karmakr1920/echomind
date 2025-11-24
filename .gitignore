@@ -1,0 +1,74 @@
+
+# Python cache / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+env/
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django / SQLite database
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (optional — keep if you want to track migrations)
+# Uncomment below if you want to ignore migration files
+# */migrations/
+# */migrations/*.py
+# */migrations/*.pyc
+
+# Environment variables
+.env
+.venv
+*.env
+.env.*
+
+# Static & media files (generated, not stored)
+staticfiles/
+static/
+media/
+
+# Logs
+*.log
+logs/
+
+# OS / editor / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# PyCharm
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.swp
+
+# Backup files
+*.bak
+*.orig
+*.tmp
+*.~*
+
+# Test / coverage
+.coverage
+htmlcov/
+.tox/
+pytest_cache/
+.cache/
+
+# MyPy / Ruff / Flake8
+.mypy_cache/
+.dmypy.json
+.pytest_cache/
+.pytype/
+.ruff_cache/

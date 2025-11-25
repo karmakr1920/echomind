@@ -120,23 +120,60 @@ class LoginForm(forms.Form):
         password = cleaned_data.get('password')
 
         if username_or_email and password:
-            # First, try to authenticate using username
-            user = authenticate(username=username_or_email, password=password)
+            # Try logging in with username first
+            user = authenticate(request=self.request, username=username_or_email, password=password)
 
-            # If not found, try to authenticate using email
+            # If failed, try with email
             if user is None:
-                from django.contrib.auth.models import User
                 try:
                     user_obj = User.objects.get(email__iexact=username_or_email)
-                    user = authenticate(username=user_obj.username, password=password)
+                    user = authenticate(request=self.request, username=user_obj.username, password=password)
                 except User.DoesNotExist:
-                    pass
+                    user = None
 
+            # Handle errors
             if user is None:
-                raise ValidationError("Invalid login credentials.")
+                self.add_error('username_or_email', "Invalid username/email or password.")
             elif not user.is_active:
-                raise ValidationError("This account is inactive. Please contact support.")
+                self.add_error('username_or_email', "This account is inactive. Contact support.")
             
-            cleaned_data['user'] = user  # so view can use request.login()
+            cleaned_data['user'] = user  # Pass user to view
 
         return cleaned_data
+    
+
+class ProfileUpdateForm(forms.Form):
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    username = forms.CharField(max_length=30, required=True)
+    email = forms.EmailField(required=True)
+    profile_pic = forms.FileField(required=False)
+
+    # Only letters allowed in names
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if not re.match(r'^[A-Za-z]+$', first_name):
+            raise ValidationError("First name can only contain letters.")
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if not re.match(r'^[A-Za-z]+$', last_name):
+            raise ValidationError("Last name can only contain letters.")
+        return last_name
+
+    # Unique username (skip current user)
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        user_qs = User.objects.filter(username__iexact=username).exclude(id=self.initial['user_id'])
+        if user_qs.exists():
+            raise ValidationError("This username already exists.")
+        return username
+
+    # Unique email (skip current user)
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        email_qs = User.objects.filter(email__iexact=email).exclude(id=self.initial['user_id'])
+        if email_qs.exists():
+            raise ValidationError("This email is already registered.")
+        return email

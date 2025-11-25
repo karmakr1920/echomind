@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Profile</title>
+  </head>
+  <body>
+    <p>Name : {{user.first_name}} {{user.last_name}}</p>
+    <p>Email : {{user.email}}</p>
+    <p>Date Joined : {{user.date_joined}}</p>
+
+    {% if user.profile.profile_pic %}
+    <img src="{{ user.profile.profile_pic.url }}" width="120" height="120" />
+    {% else %}
+    <p>No profile picture uploaded.</p>
+    {% endif %}
+
+    <button><a href="{% url 'edit_profile' %}">Edit Profile</a></button>
+  </body>
+</html>

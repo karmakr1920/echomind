@@ -6,8 +6,21 @@
     <title>All Posts</title>
   </head>
   <body>
+    {% if messages %}
+        {% for message in messages %}
+            {{message}}
+        {% endfor %}
+    {% endif %}
     <h1>All Posts</h1>
     <button><a href="{% url 'create_blog' %}">Add New Post</a></button>
+    {% if request.user.is_authenticated %}
+    <button><a href="{% url 'logout' %}">Logout</a></button>
+    <button><a href="{% url 'view_profile' %}">View Profile</a></button>
+
+    {% else %}
+    <button>
+        <a href="{% url 'login' %}">Login</a></button>
+    {% endif %}
     <table border="1" cellspacing="0" cellpadding="8">
         <thead>
             <tr>
@@ -21,8 +34,10 @@
                 <th>Read Time</th>
                 <th>Created At</th>
                 <th>Updated At</th>
+                {% if request.user.is_authenticated and request.user == blog.author %}
                 <th>Edit Post</th>
                 <th>Delete Post</th>
+                {% endif %}
             </tr>
         </thead>
 
@@ -45,8 +60,10 @@
                 <td>{{ blog.read_time }} min</td>
                 <td>{{ blog.created_at|date:"M d, Y, h:i A" }}</td>
                 <td>{{ blog.updated_at|date:"M d, Y, h:i A" }}</td>
+                {% if request.user.is_authenticated and request.user == blog.author %}
                 <td><a href="{% url 'update_blog' blog.id %}">Edit</a></td>
                 <td><a href="{% url 'delete_blog' blog.id %}">Delete</a></td>
+                {% endif %}
             </tr>
             {% empty %}
             <tr>

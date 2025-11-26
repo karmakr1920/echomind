@@ -1,0 +1,33 @@
+<div class="container my-4">
+  <h2 class="mb-4 text-center">My Posts</h2>
+
+  {% if posts %}
+    <div class="row">
+      {% for post in posts %}
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+
+          {% if post.image %}
+          <img src="{{ post.image.url }}" class="card-img-top" alt="Post Image">
+          {% endif %}
+
+          <div class="card-body">
+            <h5 class="card-title">{{ post.title }}</h5>
+            <p class="small text-muted">
+              {{ post.created_at|date:"F d, Y" }} | Views: {{ post.views }}
+            </p>
+            <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+
+            <a href="{% url 'blog_detail' post.slug %}" class="btn btn-primary btn-sm">
+              Read More
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center text-muted">You haven’t created any posts yet.</p>
+  {% endif %}
+</div>
+

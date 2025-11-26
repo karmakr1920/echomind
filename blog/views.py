@@ -5,6 +5,7 @@ from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.utils import timezone
 
 def register_view(request):
     if request.method == 'POST':
@@ -54,12 +55,19 @@ def logout_view(request):
 def index(request):
     return render(request, 'blog/index.html')
 
-
 def blog_list(request):
-    # blogs = Post.objects.filter(author = request.user)
-    blogs = Post.objects.all()
-    context = {'blogs' : blogs}
-    return render(request, 'blog/blog_list.html',context)
+    blogs = Post.objects.all()  # All posts (for listing)
+
+    # Count only user's own posts
+    user_posts_count = Post.objects.filter(author=request.user).count()
+
+
+    context = {
+        'blogs': blogs,
+        'user_posts_count': user_posts_count,
+        'current_year': timezone.now().year,
+    }
+    return render(request, 'blog/blog_list.html', context)
 
 def blog_detail(request,slug):
 
@@ -149,3 +157,8 @@ def edit_profile_view(request):
         )
 
     return render(request, 'blog/edit_profile.html', {'form': form})
+
+@login_required
+def user_posts(request):
+    posts = Post.objects.filter(author=request.user)
+    return render(request, 'blog/user_posts.html', {'posts': posts})

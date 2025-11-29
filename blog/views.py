@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 
 def register_view(request):
     if request.method == 'POST':
@@ -84,15 +86,29 @@ def blog_detail(request,slug):
 @login_required
 def create_blog(request):
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST,user = request.user)
         if form.is_valid():
             post = form.save(commit=False)     # don't save yet
             post.author = request.user         # set author manually
             post.save()                        # now save
+            # Handle new category
+            new_category = form.cleaned_data.get('new_category')
+            if new_category:
+                category_obj, created = Category.objects.get_or_create(name=new_category,user=request.user)
+                post.category = category_obj
+            post.save()
+
+            # Handle new tags
+            new_tags = form.cleaned_data.get('new_tags')
+            if new_tags:
+                tag_list = [tag.strip() for tag in new_tags.split(',')]
+                for tag_name in tag_list:
+                    tag_obj, created = Tag.objects.get_or_create(name=tag_name,user=request.user)
+                    post.tags.add(tag_obj)
             form.save_m2m()                    # save tags
             return redirect('blog_list')
     else:
-        form = PostForm()  # GET request
+        form = PostForm(user=request.user)  # GET request
     return render(request, 'blog/blog_form.html', {'form': form})
 
 @login_required
@@ -100,12 +116,37 @@ def update_blog(request, pk):
     blog = get_object_or_404(Post, pk=pk)
 
     if request.method == 'POST':
-        form = PostForm(request.POST, instance=blog)   # bind instance
+        form = PostForm(request.POST, instance=blog,user = request.user)   # bind instance
         if form.is_valid():
-            form.save()
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+
+            # Handle new category
+            new_category = form.cleaned_data.get('new_category')
+            if new_category:
+                category_obj, created = Category.objects.get_or_create(
+                    name=new_category,
+                    user=request.user
+                )
+                post.category = category_obj
+                post.save()
+
+            # Handle new tags
+            new_tags = form.cleaned_data.get('new_tags')
+            if new_tags:
+                tag_list = [tag.strip() for tag in new_tags.split(',')]
+                for tag_name in tag_list:
+                    tag_obj, created = Tag.objects.get_or_create(
+                        name=tag_name,
+                        user=request.user
+                    )
+                    post.tags.add(tag_obj)
+
+            form.save_m2m()
             return redirect('blog_list')
     else:
-        form = PostForm(instance=blog)  # Pre-filled form in GET
+        form = PostForm(instance=blog,user = request.user)  # Pre-filled form in GET
 
     return render(request, 'blog/blog_form.html', {'form': form})
 
@@ -162,3 +203,17 @@ def edit_profile_view(request):
 def user_posts(request):
     posts = Post.objects.filter(author=request.user)
     return render(request, 'blog/user_posts.html', {'posts': posts})
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # prevents logout
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('view_profile')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'blog/change_password.html', {'form': form})

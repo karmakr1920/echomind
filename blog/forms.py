@@ -1,14 +1,28 @@
 from django import forms
-from .models import Post
+from .models import Post,Category,Tag
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 import re
 
 class PostForm(forms.ModelForm):
+    new_category = forms.CharField(required=False, label="Add New Category")
+    new_tags = forms.CharField(
+        required=False,
+        label="Add New Tags (comma-separated)",
+        help_text="Example: python, django, ai"
+    )
+
     class Meta:
         model = Post
         fields = ['title', 'content', 'category', 'tags', 'status']
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')  # Get logged-in user
+        super().__init__(*args, **kwargs)
+
+        # Show only user's categories and tags
+        self.fields['category'].queryset = Category.objects.filter(user=user)
+        self.fields['tags'].queryset = Tag.objects.filter(user=user)
 
 class RegisterForm(forms.Form):
     first_name = forms.CharField(

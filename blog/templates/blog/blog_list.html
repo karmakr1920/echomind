@@ -34,7 +34,7 @@
                 <th>Read Time</th>
                 <th>Created At</th>
                 <th>Updated At</th>
-                {% if request.user.is_authenticated and request.user == blog.author %}
+                {% if request.user.is_authenticated %}
                 <th>Edit Post</th>
                 <th>Delete Post</th>
                 {% endif %}
@@ -47,7 +47,7 @@
                 <td>{{ blog.title }}</td>
                 <td><a href="{{ blog.slug }}">View</a></td>
                 <td>{{ blog.author }}</td>
-                <td>{{ blog.category }}</td>
+                <td>{{ blog.category.name }}</td>
                 <td>
                     {% for tag in blog.tags.all %}
                         {{ tag.name }}{% if not forloop.last %}, {% endif %}

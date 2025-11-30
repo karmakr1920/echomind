@@ -1,33 +1,92 @@
 <div class="container my-4">
-  <h2 class="mb-4 text-center">My Posts</h2>
-
-  {% if posts %}
-    <div class="row">
-      {% for post in posts %}
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100">
-
-          {% if post.image %}
-          <img src="{{ post.image.url }}" class="card-img-top" alt="Post Image">
+  <header>
+      <nav>
+        <ul>
+          <li>
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          {% if request.user.is_authenticated %}
+            <li>
+              <a href="{% url 'user_dashboard' %}">Dashboard</a>
+            </li>
+            <li>
+              <a href="{% url 'blog_list' %}">All Posts</a>
+            </li>
+          {% else %}
+            <li>
+              <a href="{% url 'register' %}">Register</a>
+            </li>
+            <li>
+              <a href="{% url 'login' %}">Login</a>
+            </li>
           {% endif %}
+        </ul>
+      </nav>
+    </header>
+  <h2 class="mb-4 text-center">My Posts</h2>
+  <button><a href="{% url 'create_blog' %}">Add New Post</a></button>
+    {% if request.user.is_authenticated %}
+      <button><a href="{% url 'logout' %}">Logout</a></button>
+      <button><a href="{% url 'view_profile' %}">View Profile</a></button>
+    {% else %}
+      <button><a href="{% url 'login' %}">Login</a></button>
+    {% endif %}
+<form method="get" class="d-flex mb-3">
+  <input type="search" name="q" class="form-control me-2" placeholder="Search...">
 
-          <div class="card-body">
-            <h5 class="card-title">{{ post.title }}</h5>
-            <p class="small text-muted">
-              {{ post.created_at|date:"F d, Y" }} | Views: {{ post.views }}
-            </p>
-            <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+  <select name="category" class="form-select me-2">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+      <option value="{{ cat.id }}">{{ cat.name }}</option>
+    {% endfor %}
+  </select>
 
-            <a href="{% url 'blog_detail' post.slug %}" class="btn btn-primary btn-sm">
-              Read More
-            </a>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
+  <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+  {% if posts %}
+    <div class="table-responsive mt-3">
+      <table class="table table-striped table-bordered table-hover" border="1" cellspacing="0" cellpadding="8">
+        <thead class="table-dark">
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Tags</th>
+            <th>Views</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in posts %}
+            <tr>
+              <td>{{ post.title }}</td>
+              <td>{{ post.category.name }}</td>
+
+              <td>
+                {% for tag in post.tags.all %}
+                  <span class="badge bg-secondary">{{ tag.name }}</span>
+                {% empty %}
+                  <span class="text-muted">No tags</span>
+                {% endfor %}
+              </td>
+
+              <td>{{ post.views }}</td>
+              <td>{{ post.created_at|date:'M d, Y' }}</td>
+
+              <td>
+                <a href="{% url 'blog_detail' post.slug %}" class="btn btn-sm btn-info">View</a>
+
+                {% if request.user == post.author %}
+                  <a href="{% url 'update_blog' post.id %}" class="btn btn-sm btn-warning">Edit</a>
+                  <a href="{% url 'delete_blog' post.id %}" class="btn btn-sm btn-danger">Delete</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   {% else %}
     <p class="text-center text-muted">You haven’t created any posts yet.</p>
   {% endif %}
 </div>
-

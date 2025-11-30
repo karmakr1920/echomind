@@ -4,7 +4,7 @@ from django.utils.text import slugify
 
 class Category(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50,unique=True)
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
@@ -27,7 +27,7 @@ class Category(models.Model):
 
 class Tag(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30,unique=True)
 
     def __str__(self):
         return self.name

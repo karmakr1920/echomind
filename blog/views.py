@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.db.models import Q
 
 def register_view(request):
     if request.method == 'POST':
@@ -55,17 +56,34 @@ def logout_view(request):
     return redirect('login')
 
 def index(request):
-    return render(request, 'blog/index.html')
+    blogs = Post.objects.all().order_by('-created_at')
+    return render(request, 'blog/index.html',{'blogs' : blogs})
 
 def blog_list(request):
-    blogs = Post.objects.all()  # All posts (for listing)
+    blogs = Post.objects.select_related('category', 'author').prefetch_related('tags')
+    categories = Category.objects.values('id','name').distinct()
+    query = request.GET.get('q')
+    category_id = request.GET.get('category')
+
+    if category_id:
+        blogs = blogs.filter(category_id=category_id)
+    if query:
+        blogs = blogs.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
 
     # Count only user's own posts
-    user_posts_count = Post.objects.filter(author=request.user).count()
-
+    if request.user.is_authenticated:
+        user_posts_count = Post.objects.filter(author=request.user).count()
+    else:
+        user_posts_count = 0
 
     context = {
         'blogs': blogs,
+        'categories' : categories,
         'user_posts_count': user_posts_count,
         'current_year': timezone.now().year,
     }
@@ -84,31 +102,47 @@ def blog_detail(request,slug):
     return render(request, 'blog/blog_detail.html', {'blog': blog})
 
 @login_required
+def user_dashboard(request):
+    blogs = Post.objects.filter(author=request.user)
+    return render(request,'blog/user_dashboard.html',{'blogs': blogs})
+    
+@login_required
 def create_blog(request):
     if request.method == 'POST':
-        form = PostForm(request.POST,user = request.user)
+        form = PostForm(request.POST, request.FILES, user=request.user)
+        
         if form.is_valid():
-            post = form.save(commit=False)     # don't save yet
-            post.author = request.user         # set author manually
-            post.save()                        # now save
-            # Handle new category
+            post = form.save(commit=False)
+            post.author = request.user
+
+            # Handle new category BEFORE saving post
             new_category = form.cleaned_data.get('new_category')
             if new_category:
-                category_obj, created = Category.objects.get_or_create(name=new_category,user=request.user)
+                category_obj, created = Category.objects.get_or_create(
+                    name=new_category, 
+                    user=request.user
+                )
                 post.category = category_obj
-            post.save()
 
-            # Handle new tags
+            post.save()  # Save after assigning category
+
+            form.save_m2m()  # Save selected tags from form
+            # Now handle tags AFTER post.save()
             new_tags = form.cleaned_data.get('new_tags')
             if new_tags:
                 tag_list = [tag.strip() for tag in new_tags.split(',')]
                 for tag_name in tag_list:
-                    tag_obj, created = Tag.objects.get_or_create(name=tag_name,user=request.user)
+                    tag_obj, created = Tag.objects.get_or_create(
+                        name=tag_name, 
+                        user=request.user
+                    )
                     post.tags.add(tag_obj)
-            form.save_m2m()                    # save tags
+
             return redirect('blog_list')
+
     else:
-        form = PostForm(user=request.user)  # GET request
+        form = PostForm(user=request.user)
+
     return render(request, 'blog/blog_form.html', {'form': form})
 
 @login_required
@@ -202,7 +236,20 @@ def edit_profile_view(request):
 @login_required
 def user_posts(request):
     posts = Post.objects.filter(author=request.user)
-    return render(request, 'blog/user_posts.html', {'posts': posts})
+    categories = Category.objects.values('id','name').distinct()
+    query = request.GET.get('q')
+    category_id = request.GET.get('category')
+    if category_id:
+        posts = posts.filter(category_id=category_id)
+    
+    if query:
+        posts = posts.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
+    return render(request, 'blog/user_posts.html', {'posts': posts,'categories': categories})
 
 @login_required
 def change_password(request):

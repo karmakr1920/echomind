@@ -6,6 +6,30 @@
     <title>Blog Detail</title>
 </head>
 <body>
+    <header>
+      <nav>
+        <ul>
+          <li>
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          {% if request.user.is_authenticated %}
+            <li>
+              <a href="{% url 'user_dashboard' %}">Dashboard</a>
+            </li>
+            <li>
+              <a href="{% url 'user_posts' %}">My Posts</a>
+            </li>
+          {% else %}
+            <li>
+              <a href="{% url 'register' %}">Register</a>
+            </li>
+            <li>
+              <a href="{% url 'login' %}">Login</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
     {{blog.title}}
     {{blog.content}}
     {{blog.author}}

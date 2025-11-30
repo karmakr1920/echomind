@@ -1,13 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home - EchoMind</title>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <ul>
+          <li>
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          {% if request.user.is_authenticated %}
+            <li>
+              <a href="{% url 'user_dashboard' %}">Dashboard</a>
+            </li>
+            <li>
+              <a href="{% url 'blog_list' %}">All Posts</a>
+            </li>
+          {% else %}
+            <li>
+              <a href="{% url 'register' %}">Register</a>
+            </li>
+            <li>
+              <a href="{% url 'login' %}">Login</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
     <h1>Welcome to EchoMind</h1>
-    <button><a href="{% url 'register' %}">Register</a></button>
-    <button><a href="{% url 'login' %}">Login</a></button>
-</body>
+    <h2>Latest Blogs</h2>
+    <div class="container">
+      <div class="row">
+        {% if blogs %}
+          <table border="1" cellspacing="0" cellpadding="8">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>View Post</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Tags</th>
+                <th>Status</th>
+                <th>Views</th>
+                <th>Read Time</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                {% if request.user.is_authenticated %}
+                  <th>Edit Post</th>
+                  <th>Delete Post</th>
+                {% endif %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for blog in blogs %}
+                <tr>
+                  <td>{{ blog.title }}</td>
+                  <td>
+                    <a href="{{ blog.slug }}">View</a>
+                  </td>
+                  <td>{{ blog.author }}</td>
+                  <td>{{ blog.category.name }}</td>
+                  <td>
+                    {% for tag in blog.tags.all %}
+                      {{ tag.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      No tags
+                    {% endfor %}
+                  </td>
+                  <td>{{ blog.status }}</td>
+                  <td>{{ blog.views }}</td>
+                  <td>{{ blog.read_time }} min</td>
+                  <td>{{ blog.created_at|date:'M d, Y, h:i A' }}</td>
+                  <td>{{ blog.updated_at|date:'M d, Y, h:i A' }}</td>
+                  {% if request.user.is_authenticated and request.user == blog.author %}
+                    <td>
+                      <a href="{% url 'update_blog' blog.id %}">Edit</a>
+                    </td>
+                    <td>
+                      <a href="{% url 'delete_blog' blog.id %}">Delete</a>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="10">No blogs found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      </div>
+    </div>
+  </body>
 </html>

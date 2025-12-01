@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from .models import Post,Category,Tag
-from .forms import PostForm,RegisterForm,LoginForm,ProfileUpdateForm
+from .forms import PostForm,RegisterForm,LoginForm,ProfileUpdateForm,CommentForm
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -92,14 +92,35 @@ def blog_list(request):
 def blog_detail(request,slug):
 
     blog = get_object_or_404(Post, slug=slug)
+    # Fetch comments for this post
+    comments = blog.comments.all()
+    # Handle comment form submission
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.save(commit=False)
+                comment.post = blog
+                comment.user = request.user
+                comment.save()
+                return redirect('blog_detail', slug=blog.slug)
+        else:
+            return redirect('login')
+
+    else:
+        form = CommentForm()
     # Session-based unique view counting
     session_key = f'post_viewed_{blog.id}'
     if not request.session.get(session_key, False):
         blog.views = blog.views + 1
         blog.save(update_fields=['views'])
         request.session[session_key] = True  # mark as viewed
-
-    return render(request, 'blog/blog_detail.html', {'blog': blog})
+    context = {
+        'blog': blog,
+        'comments': comments,
+        'form': form,
+    }
+    return render(request, 'blog/blog_detail.html', context)
 
 @login_required
 def user_dashboard(request):

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blog Detail</title>
-</head>
-<body>
+  </head>
+  <body>
     <header>
       <nav>
         <ul>
@@ -13,26 +13,45 @@
             <a href="{% url 'home' %}">Home</a>
           </li>
           {% if request.user.is_authenticated %}
-            <li>
-              <a href="{% url 'user_dashboard' %}">Dashboard</a>
-            </li>
-            <li>
-              <a href="{% url 'user_posts' %}">My Posts</a>
-            </li>
+          <li>
+            <a href="{% url 'user_dashboard' %}">Dashboard</a>
+          </li>
+          <li>
+            <a href="{% url 'user_posts' %}">My Posts</a>
+          </li>
           {% else %}
-            <li>
-              <a href="{% url 'register' %}">Register</a>
-            </li>
-            <li>
-              <a href="{% url 'login' %}">Login</a>
-            </li>
+          <li>
+            <a href="{% url 'register' %}">Register</a>
+          </li>
+          <li>
+            <a href="{% url 'login' %}">Login</a>
+          </li>
           {% endif %}
         </ul>
       </nav>
     </header>
-    {{blog.title}}
-    {{blog.content}}
-    {{blog.author}}
-    {{blog.read_time}} min read
-</body>
+    {{blog.title}} {{blog.content}} {{blog.author}} {{blog.read_time}} min read
+    <h3>Comments ({{ comments.count }})</h3>
+    <hr />
+
+    {% for comment in comments %}
+    <div class="mb-3 p-2 border rounded">
+      <strong>{{ comment.user.username }}</strong> • {{ comment.created_at }}<br />
+      <p>{{ comment.content }}</p>
+    </div>
+    {% empty %}
+    <p>No comments yet. Be the first to comment!</p>
+    {% endfor %}
+
+    <hr />
+
+    {% if user.is_authenticated %}
+    <form method="POST">
+      {% csrf_token %} {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Add Comment</button>
+    </form>
+    {% else %}
+    <p>You must <a href="{% url 'login' %}">login</a> to comment.</p>
+    {% endif %}
+  </body>
 </html>

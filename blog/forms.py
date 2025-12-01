@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post,Category,Tag
+from .models import Post,Category,Tag,Comment
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
@@ -191,3 +191,12 @@ class ProfileUpdateForm(forms.Form):
         if email_qs.exists():
             raise ValidationError("This email is already registered.")
         return email
+    
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write your comment...'}),
+        }

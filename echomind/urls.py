@@ -15,14 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-from django.conf import settings
+from django.urls import path, include
 from django.conf.urls.static import static
-
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from ckeditor_uploader import views as ckeditor_views
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('blog.urls'))
+    # FIX: remove Django-admin login requirement for CKEditor upload
+    path('ckeditor/upload/', login_required(ckeditor_views.upload), name='ckeditor_upload'),
+    path('ckeditor/browse/', login_required(ckeditor_views.browse), name='ckeditor_browse'),
+
+    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path('',include('blog.urls')),  
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
+    urlpatterns+=static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

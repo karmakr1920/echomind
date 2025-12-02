@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 import re
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 class PostForm(forms.ModelForm):
     new_category = forms.CharField(required=False, label="Add New Category")
@@ -12,7 +13,7 @@ class PostForm(forms.ModelForm):
         label="Add New Tags (comma-separated)",
         help_text="Example: python, django, ai"
     )
-
+    content = forms.CharField(widget=CKEditorUploadingWidget())
     class Meta:
         model = Post
         fields = ['title', 'content', 'category', 'tags', 'status']

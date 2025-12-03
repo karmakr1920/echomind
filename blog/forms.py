@@ -16,7 +16,7 @@ class PostForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     class Meta:
         model = Post
-        fields = ['title', 'content', 'category', 'tags', 'status']
+        fields = ['title', 'slug', 'content', 'category', 'tags', 'status']
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')  # Get logged-in user
         super().__init__(*args, **kwargs)

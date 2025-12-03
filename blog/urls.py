@@ -17,6 +17,9 @@ urlpatterns = [
     path('my-posts/', views.user_posts, name='user_posts'),
     path('dashboard',views.user_dashboard,name='user_dashboard'),
     path('post/<int:post_id>/like/', views.like_post, name='like_post'),
+    path('post/<int:post_id>/bookmark/', views.bookmark_post, name='add_bookmark'),
+    path('saved-posts/', views.saved_posts, name='saved_posts'),
+
 
 
 ]

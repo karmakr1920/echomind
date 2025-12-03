@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Saved Posts</title>
+</head>
+<body>
+
+<h1>My Saved Posts</h1>
+<hr>
+
+{% if saved_posts %}
+    {% for item in saved_posts %}
+        <div class="post-card">
+            <h2>
+                <a href="{% url 'blog_detail' item.post.slug %}">
+                    {{ item.post.title }}
+                </a>
+            </h2>
+            <p>{{ item.post.read_time }} min read • {{ item.post.likes.count }} Likes</p>
+            <p>{{ item.post.created_at.date }}</p>
+            <hr>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No saved posts yet.</p>
+{% endif %}
+
+</body>
+</html>

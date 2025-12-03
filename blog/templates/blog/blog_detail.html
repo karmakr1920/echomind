@@ -36,6 +36,7 @@
 
     <p>By {{ blog.author }} • {{ blog.read_time }} min read</p>
     <p>{{ blog.likes.count }} Likes</p>
+    <p>{{ blog.bookmark.count }} Bookmarks</p>
     {% if user.is_authenticated %}
     
     {% if is_liked %}
@@ -44,9 +45,16 @@
         <a href="{% url 'like_post' blog.id %}" class="btn btn-primary">Like</a>
     {% endif %}
 
+    {% if is_bookmarked %}
+        <a href="{% url 'add_bookmark' blog.id %}" class="btn btn-danger">Unsave</a>
+    {% else %}
+        <a href="{% url 'add_bookmark' blog.id %}" class="btn btn-primary">Save</a>
+    {% endif %}
+
 {% else %}
     <p><a href="{% url 'login' %}">Login</a> to like this post.</p>
 {% endif %}
+
 
 
     <h3>Comments ({{ comments.count }})</h3>

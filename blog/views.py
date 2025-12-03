@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from .models import Post,Category,Tag,Like
+from .models import Post,Category,Tag,Like,Bookmark
 from .forms import PostForm,RegisterForm,LoginForm,ProfileUpdateForm,CommentForm
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
@@ -99,6 +99,11 @@ def blog_detail(request, slug):
     if request.user.is_authenticated:
         is_liked = Like.objects.filter(post=blog, user=request.user).exists()
 
+    # Check if user already boomarked this post
+    is_bookmarked = False
+    if request.user.is_authenticated:
+        is_bookmarked = Bookmark.objects.filter(post=blog, user=request.user).exists()
+
     # Handle comment form submission
     if request.method == "POST":
         if request.user.is_authenticated:
@@ -126,6 +131,7 @@ def blog_detail(request, slug):
         'comments': comments,
         'form': form,
         'is_liked': is_liked, 
+        'is_bookmarked': is_bookmarked, 
         'total_likes': blog.likes.count(),  # optional but good
     }
     return render(request, 'blog/blog_detail.html', context)
@@ -294,6 +300,7 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'blog/change_password.html', {'form': form})
+
 def like_post(request, post_id):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -311,3 +318,31 @@ def like_post(request, post_id):
         Like.objects.create(post=post, user=request.user)
 
     return redirect('blog_detail', slug=post.slug)
+
+def bookmark_post(request, post_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    post = get_object_or_404(Post, id=post_id)
+
+    # Check if the user already liked the post
+    existing_bookmark = Bookmark.objects.filter(post=post, user=request.user).first()
+
+    if existing_bookmark:
+        # Unlike
+        existing_bookmark.delete()
+    else:
+        # Like
+        Bookmark.objects.create(post=post, user=request.user)
+
+    return redirect('blog_detail', slug=post.slug)
+
+@login_required
+def saved_posts(request):
+    # get all posts saved by this user
+    saved = Bookmark.objects.filter(user=request.user).select_related("post")
+
+    context = {
+        "saved_posts": saved
+    }
+    return render(request, "blog/saved_posts.html", context)

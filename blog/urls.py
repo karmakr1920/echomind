@@ -15,6 +15,8 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path('my-posts/', views.user_posts, name='user_posts'),
-    path('dashboard',views.user_dashboard,name='user_dashboard')
+    path('dashboard',views.user_dashboard,name='user_dashboard'),
+    path('post/<int:post_id>/like/', views.like_post, name='like_post'),
+
 
 ]

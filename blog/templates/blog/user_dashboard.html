@@ -70,7 +70,7 @@
           <tr>
             <td>{{ blog.title }}</td>
             <td>
-              <a href="{{ blog.slug }}">View</a>
+              <a href="{% url 'blog_detail' blog.slug %}">View</a>
             </td>
             <td>{{ blog.author }}</td>
             <td>{{ blog.category.name }}</td>

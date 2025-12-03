@@ -32,11 +32,22 @@
     </header>
     <h1>{{ blog.title }}</h1>
 
-<div class="content">
-    {{ blog.content|safe }}
-</div>
+    <div class="content">{{ blog.content|safe }}</div>
 
-<p>By {{ blog.author }} • {{ blog.read_time }} min read</p>
+    <p>By {{ blog.author }} • {{ blog.read_time }} min read</p>
+    <p>{{ blog.likes.count }} Likes</p>
+    {% if user.is_authenticated %}
+    
+    {% if is_liked %}
+        <a href="{% url 'like_post' blog.id %}" class="btn btn-danger">Unlike</a>
+    {% else %}
+        <a href="{% url 'like_post' blog.id %}" class="btn btn-primary">Like</a>
+    {% endif %}
+
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to like this post.</p>
+{% endif %}
+
 
     <h3>Comments ({{ comments.count }})</h3>
     <hr />

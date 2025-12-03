@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from .models import Post,Category,Tag
+from .models import Post,Category,Tag,Like
 from .forms import PostForm,RegisterForm,LoginForm,ProfileUpdateForm,CommentForm
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
@@ -89,11 +89,16 @@ def blog_list(request):
     }
     return render(request, 'blog/blog_list.html', context)
 
-def blog_detail(request,slug):
+def blog_detail(request, slug):
 
     blog = get_object_or_404(Post, slug=slug)
-    # Fetch comments for this post
     comments = blog.comments.all()
+
+    # Check if user already liked this post
+    is_liked = False
+    if request.user.is_authenticated:
+        is_liked = Like.objects.filter(post=blog, user=request.user).exists()
+
     # Handle comment form submission
     if request.method == "POST":
         if request.user.is_authenticated:
@@ -106,21 +111,25 @@ def blog_detail(request,slug):
                 return redirect('blog_detail', slug=blog.slug)
         else:
             return redirect('login')
-
     else:
         form = CommentForm()
-    # Session-based unique view counting
+
+    # View counter
     session_key = f'post_viewed_{blog.id}'
     if not request.session.get(session_key, False):
         blog.views = blog.views + 1
         blog.save(update_fields=['views'])
-        request.session[session_key] = True  # mark as viewed
+        request.session[session_key] = True
+
     context = {
         'blog': blog,
         'comments': comments,
         'form': form,
+        'is_liked': is_liked, 
+        'total_likes': blog.likes.count(),  # optional but good
     }
     return render(request, 'blog/blog_detail.html', context)
+
 
 @login_required
 def user_dashboard(request):
@@ -285,3 +294,20 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'blog/change_password.html', {'form': form})
+def like_post(request, post_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    post = get_object_or_404(Post, id=post_id)
+
+    # Check if the user already liked the post
+    existing_like = Like.objects.filter(post=post, user=request.user).first()
+
+    if existing_like:
+        # Unlike
+        existing_like.delete()
+    else:
+        # Like
+        Like.objects.create(post=post, user=request.user)
+
+    return redirect('blog_detail', slug=post.slug)
